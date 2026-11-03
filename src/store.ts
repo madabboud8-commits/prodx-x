@@ -129,7 +129,7 @@ export type UiState = {
     intensity: number
     /** Rotation-rate multiplier. 0 .. 5, default 1. */
     spin: number
-    style: 'ring' | 'sphere' | 'wire'
+    style: 'gauge' | 'ring' | 'sphere' | 'wire'
     visible: boolean
   }
   orbits: OrbitObject[]
@@ -145,7 +145,7 @@ export type UiState = {
 
 export const UI_DEFAULTS: UiState = {
   accent: null, background: null, palette: {},
-  reactor: { color: null, scale: 1, intensity: 1, spin: 1, style: 'ring', visible: true },
+  reactor: { color: null, scale: 1, intensity: 1, spin: 1, style: 'gauge', visible: true },
   orbits: [],
   chrome: { systems: true, transcript: true, toolBadge: true, suggestions: true, brand: true },
   effect: null,

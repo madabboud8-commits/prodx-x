@@ -104,7 +104,7 @@ function aim(tint: Tint, css: string): THREE.Color {
   return tint.color
 }
 
-const STYLE_INDEX = { ring: 0, sphere: 1, wire: 2 } as const
+const STYLE_INDEX = { gauge: 0, ring: 0, sphere: 1, wire: 2 } as const
 
 function Rig() {
   const drive = useMemo<Drive>(
@@ -154,7 +154,8 @@ function Rig() {
     drive.reactor.intensity += (r.intensity - drive.reactor.intensity) * k
     drive.reactor.spin += (r.spin - drive.reactor.spin) * k
     drive.reactor.style = STYLE_INDEX[r.style] ?? STYLE_INDEX.ring
-    drive.reactor.visible = r.visible
+    // X: the 'gauge' face is drawn in the HUD, so the 3D orb and its dust stay hidden.
+    drive.reactor.visible = r.visible && r.style !== 'gauge'
 
     drive.spin += (spinFor[phase] - drive.spin) * Math.min(1, dt * 2)
     drive.amp = phase === 'dormant' || phase === 'offline' ? AMP_CALM : AMP_LIVE
