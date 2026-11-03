@@ -24,12 +24,12 @@ type Fil = {
 }
 
 const TAGS: { x: number; y: number; text: string }[] = [
-  { x: -0.18, y: -0.46, text: 'DATASHEET · CLAIMS' },
-  { x: 0.22, y: -0.3, text: 'SPEC CHECK  kW / W' },
-  { x: -0.42, y: -0.06, text: 'SOURCE: BRAND > ALIBABA' },
-  { x: 0.3, y: 0.08, text: 'NOISE  dB(A)' },
-  { x: -0.2, y: 0.3, text: 'HEAT-UP  t(min)' },
-  { x: 0.12, y: 0.52, text: 'RESULT ARCHIVE' },
+  { x: -0.3, y: -0.5, text: 'DATASHEET · CLAIMS' },
+  { x: 0.32, y: -0.32, text: 'SPEC CHECK  kW / W' },
+  { x: -0.4, y: -0.04, text: 'SOURCE: BRAND > ALIBABA' },
+  { x: 0.38, y: 0.1, text: 'NOISE  dB(A)' },
+  { x: -0.32, y: 0.36, text: 'HEAT-UP  t(min)' },
+  { x: 0.28, y: 0.56, text: 'RESULT ARCHIVE' },
 ]
 
 function rand(seed: number) {
@@ -83,6 +83,58 @@ const LINKS: [number, number, number, number][] = (() => {
       if (dx * dx + dy * dy < 0.012) out.push([nodes[i].x, nodes[i].y, nodes[j].x, nodes[j].y])
     }
   return out.slice(0, 260)
+})()
+
+/**
+ * The red-orange plexus clusters above and below the core: dense node meshes
+ * in two lobes, linked to their near neighbours so they read as triangles.
+ */
+const MESH = (() => {
+  const r = rand(23)
+  const pts: { x: number; y: number }[] = []
+  for (const lobe of [-1, 1]) {
+    for (let i = 0; i < 170; i++) {
+      const a = r() * Math.PI * 2
+      const d = Math.sqrt(r())
+      pts.push({ x: Math.cos(a) * d * 0.42 + (r() - 0.5) * 0.1, y: lobe * (0.62 + Math.sin(a) * d * 0.38) })
+    }
+  }
+  for (let i = 0; i < 90; i++) {
+    const a = r() * Math.PI * 2
+    const d = 0.38 + r() * 0.3
+    pts.push({ x: Math.cos(a) * d, y: Math.sin(a) * d * 1.2 })
+  }
+  const links: [number, number][] = []
+  for (let i = 0; i < pts.length; i++)
+    for (let j = i + 1; j < pts.length; j++) {
+      const dx = pts[i].x - pts[j].x
+      const dy = pts[i].y - pts[j].y
+      if (dx * dx + dy * dy < 0.0105) links.push([i, j])
+    }
+  return { pts, links }
+})()
+
+/** Flame tongues licking off the core's edge. */
+const EMBERS = (() => {
+  const r = rand(91)
+  return Array.from({ length: 420 }, () => ({
+    a: r() * Math.PI * 2,
+    len: 0.04 + Math.pow(r(), 2) * 0.32,
+    w: 1 + r() * 3,
+    ph: r() * Math.PI * 2,
+    hue: r(),
+  }))
+})()
+
+/** A jagged, burnt-paper outline for the core. */
+const RIM = (() => {
+  const r = rand(5)
+  const raw = Array.from({ length: 96 }, () => (r() - 0.5) * 0.12)
+  // Smooth the noise so the edge reads as burnt, not as gear teeth.
+  return raw.map((_, i) => {
+    const a = raw[(i + 95) % 96], b = raw[i], c = raw[(i + 1) % 96]
+    return 1 + (a + b * 2 + c) / 4 + Math.sin(i * 0.26) * 0.03
+  })
 })()
 
 const ACTIVITY: Record<Phase, number> = {
@@ -156,6 +208,41 @@ export function Neural() {
       }
       ctx.stroke()
 
+      // Fiery haze: the orange explosion behind everything.
+      const hz = (x: number, y: number, rad: number, c: string, al: number) => {
+        const hg = ctx.createRadialGradient(x, y, 0, x, y, rad)
+        hg.addColorStop(0, c.replace('A', String(al)))
+        hg.addColorStop(1, c.replace('A', '0'))
+        ctx.fillStyle = hg
+        ctx.beginPath()
+        ctx.arc(x, y, rad, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      const flare = 1 + lvl * 0.8 + (busy ? 0.15 * Math.sin(t * 4) : 0)
+      hz(cx, cy, R * 1.25 * flare, 'rgba(255,90,0,A)', 0.32 * I)
+      hz(cx, cy - R * 0.55, R * 0.7 * flare, 'rgba(255,60,10,A)', 0.3 * I)
+      hz(cx, cy + R * 0.6, R * 0.7 * flare, 'rgba(255,60,10,A)', 0.28 * I)
+      hz(cx - R * 0.15, cy, R * 0.6 * flare, 'rgba(255,190,60,A)', 0.4 * I)
+
+      // Red-orange plexus clusters.
+      ctx.lineWidth = 0.9
+      ctx.strokeStyle = `rgba(255,70,25,${0.42 * I})`
+      ctx.beginPath()
+      for (const [i, j] of MESH.links) {
+        const p = MESH.pts[i]
+        const q = MESH.pts[j]
+        ctx.moveTo(cx + p.x * breathe * R, cy + p.y * breathe * R)
+        ctx.lineTo(cx + q.x * breathe * R, cy + q.y * breathe * R)
+      }
+      ctx.stroke()
+      for (const [k, p] of MESH.pts.entries()) {
+        const tw = 0.6 + 0.4 * Math.sin(t * 2 + k)
+        ctx.fillStyle = `rgba(255,${120 + (k % 5) * 25},40,${0.8 * I * tw})`
+        ctx.beginPath()
+        ctx.arc(cx + p.x * breathe * R, cy + p.y * breathe * R, k % 7 === 0 ? 2.4 : 1.3, 0, Math.PI * 2)
+        ctx.fill()
+      }
+
       // Filaments: glow pass then core pass.
       for (const pass of [0, 1]) {
         for (const f of FILS) {
@@ -194,36 +281,80 @@ export function Neural() {
         }
       }
 
-      // The core: a hot crescent with a dark heart, like the reference.
-      const cr = R * 0.2 * breathe
-      const g = ctx.createRadialGradient(cx - cr * 0.25, cy, cr * 0.2, cx, cy, cr * 2.4)
-      g.addColorStop(0, `rgba(255,236,170,${0.85 * I})`)
-      g.addColorStop(0.35, `rgba(255,170,40,${0.6 * I})`)
-      g.addColorStop(1, 'rgba(255,90,0,0)')
+      // The core: a burning hole with a jagged, white-hot edge and flames
+      // licking off it, like the reference.
+      const cr = R * 0.34 * breathe * (1 + lvl * 0.1)
+      const rimPath = (scale: number, jit: number) => {
+        ctx.beginPath()
+        RIM.forEach((rr, i) => {
+          const a = (i / RIM.length) * Math.PI * 2
+          const j = rr + Math.sin(t * 3 + i) * jit
+          const x = cx + Math.cos(a) * cr * scale * j * 0.9
+          const y = cy + Math.sin(a) * cr * scale * j * 1.08
+          if (i === 0) ctx.moveTo(x, y)
+          else ctx.lineTo(x, y)
+        })
+        ctx.closePath()
+      }
+      // Flames.
+      ctx.lineCap = 'round'
+      for (const em of EMBERS) {
+        const fl = 0.55 + 0.45 * Math.sin(t * (3 + em.hue * 4) + em.ph)
+        const r0 = cr * 0.95
+        const r1 = cr * (0.95 + em.len * fl * (1 + lvl * 1.2) * 2.2)
+        const ca = Math.cos(em.a) * 0.9
+        const sa = Math.sin(em.a) * 1.08
+        ctx.strokeStyle = colour(em.hue * 0.9, 0.35 * I * fl)
+        ctx.lineWidth = em.w * 2.2
+        ctx.beginPath()
+        ctx.moveTo(cx + ca * r0, cy + sa * r0)
+        ctx.lineTo(cx + ca * r1, cy + sa * r1)
+        ctx.stroke()
+      }
+      // Hot glow hugging the rim.
+      const g = ctx.createRadialGradient(cx, cy, cr * 0.6, cx, cy, cr * 1.7)
+      g.addColorStop(0, `rgba(255,240,180,${0.95 * I})`)
+      g.addColorStop(0.45, `rgba(255,170,30,${0.7 * I})`)
+      g.addColorStop(1, 'rgba(255,80,0,0)')
       ctx.fillStyle = g
       ctx.beginPath()
-      ctx.arc(cx, cy, cr * 2.4, 0, Math.PI * 2)
+      ctx.arc(cx, cy, cr * 1.7, 0, Math.PI * 2)
       ctx.fill()
+      // The hole: dark gold inside, not black.
       ctx.globalCompositeOperation = 'source-over'
-      ctx.fillStyle = 'rgba(14,12,10,0.85)'
-      ctx.beginPath()
-      ctx.ellipse(cx + cr * 0.25, cy, cr * 0.85, cr * 1.05, 0, 0, Math.PI * 2)
+      const hole = ctx.createRadialGradient(cx + cr * 0.2, cy, 0, cx, cy, cr)
+      hole.addColorStop(0, 'rgba(40,28,10,0.96)')
+      hole.addColorStop(0.75, 'rgba(70,46,12,0.93)')
+      hole.addColorStop(1, 'rgba(150,90,20,0.9)')
+      ctx.fillStyle = hole
+      rimPath(0.92, 0.01)
       ctx.fill()
+      // White-hot burning edge, brightest on the left like the reference.
       ctx.globalCompositeOperation = 'lighter'
-      ctx.strokeStyle = `rgba(255,236,170,${I})`
-      ctx.lineWidth = 6
-      ctx.beginPath()
-      ctx.ellipse(cx + cr * 0.2, cy, cr * 0.95, cr * 1.12, 0, Math.PI * 0.55, Math.PI * 1.45)
+      ctx.shadowColor = 'rgba(255,200,80,0.9)'
+      ctx.shadowBlur = 24
+      ctx.strokeStyle = `rgba(255,215,110,${0.85 * I})`
+      ctx.lineWidth = 4
+      rimPath(0.94, 0.012)
       ctx.stroke()
+      const hot = ctx.createLinearGradient(cx - cr, cy, cx + cr, cy)
+      hot.addColorStop(0, `rgba(255,252,225,${I})`)
+      hot.addColorStop(0.5, `rgba(255,235,160,${0.6 * I})`)
+      hot.addColorStop(1, 'rgba(255,200,90,0)')
+      ctx.strokeStyle = hot
+      ctx.lineWidth = 9
+      rimPath(0.94, 0.012)
+      ctx.stroke()
+      ctx.shadowBlur = 0
 
       // Data tags.
       ctx.globalCompositeOperation = 'source-over'
       ctx.font = `${Math.max(9, R * 0.045)}px "IBM Plex Mono", monospace`
       ctx.textBaseline = 'middle'
       for (const tg of TAGS) {
-        const x = cx + tg.x * R * 1.6
-        const y = cy + tg.y * R * 1.3
         const w = ctx.measureText(tg.text).width + 14
+        const x = cx + tg.x * R * 1.6 - (tg.x < 0 ? w : 0)
+        const y = cy + tg.y * R * 1.3
         const h = Math.max(14, R * 0.08)
         ctx.fillStyle = 'rgba(20,16,12,0.78)'
         ctx.fillRect(x, y - h / 2, w, h)
