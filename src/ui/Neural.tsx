@@ -23,6 +23,26 @@ type Fil = {
   nodes: number[] // indices into pts that carry a node
 }
 
+/** The lab panel down the right edge, like the list in the reference. */
+const PANEL: [string, string][] = [
+  ['HEATERS', 'READY'],
+  ['AC UNITS', 'DRAFT'],
+  ['COOLERS', 'DRAFT'],
+  ['LIGHTING', 'DRAFT'],
+  ['SOLAR', 'DRAFT'],
+  ['BATTERIES', 'DRAFT'],
+  ['CAMERAS', 'DRAFT'],
+  ['GADGETS', 'DRAFT'],
+  ['THERMO', 'ON'],
+  ['POWER MTR', 'ON'],
+  ['SOUND MTR', 'ON'],
+  ['LUX MTR', 'ON'],
+  ['CO DETECT', 'ON'],
+  ['SCALE', 'ON'],
+  ['INBOX', 'WATCH'],
+  ['ARCHIVE', 'SYNC'],
+]
+
 const TAGS: { x: number; y: number; text: string }[] = [
   { x: -0.3, y: -0.5, text: 'DATASHEET · CLAIMS' },
   { x: 0.32, y: -0.32, text: 'SPEC CHECK  kW / W' },
@@ -43,13 +63,13 @@ function rand(seed: number) {
 function build(): Fil[] {
   const r = rand(7)
   const fils: Fil[] = []
-  const N = 150
+  const N = 230
   for (let i = 0; i < N; i++) {
     // Denser bursts up and down, like the reference.
     const base = r() * Math.PI * 2
     const bias = Math.sin(base * 2) * 0.35
     let a = base + bias
-    const len = 0.55 + Math.pow(r(), 1.6) * 1.35
+    const len = 0.6 + Math.pow(r(), 1.3) * 1.7
     const steps = 14
     const pts = []
     let x = Math.cos(a) * (0.16 + r() * 0.08)
@@ -124,6 +144,12 @@ const EMBERS = (() => {
     ph: r() * Math.PI * 2,
     hue: r(),
   }))
+})()
+
+/** Darker smouldering patches inside the core. */
+const BLOTS: [number, number, number, number][] = (() => {
+  const r = rand(44)
+  return Array.from({ length: 14 }, () => [(r() - 0.4) * 1.0, (r() - 0.5) * 1.3, 0.12 + r() * 0.25, 0.25 + r() * 0.35] as [number, number, number, number])
 })()
 
 /** A jagged, burnt-paper outline for the core. */
@@ -323,9 +349,9 @@ export function Neural() {
       // The hole: dark gold inside, not black.
       ctx.globalCompositeOperation = 'source-over'
       const hole = ctx.createRadialGradient(cx + cr * 0.2, cy, 0, cx, cy, cr)
-      hole.addColorStop(0, 'rgba(40,28,10,0.96)')
-      hole.addColorStop(0.75, 'rgba(70,46,12,0.93)')
-      hole.addColorStop(1, 'rgba(150,90,20,0.9)')
+      hole.addColorStop(0, 'rgba(22,16,7,0.97)')
+      hole.addColorStop(0.7, 'rgba(48,32,10,0.95)')
+      hole.addColorStop(1, 'rgba(120,72,16,0.9)')
       ctx.fillStyle = hole
       rimPath(0.92, 0.01)
       ctx.fill()
@@ -333,16 +359,31 @@ export function Neural() {
       ctx.globalCompositeOperation = 'lighter'
       ctx.shadowColor = 'rgba(255,200,80,0.9)'
       ctx.shadowBlur = 24
-      ctx.strokeStyle = `rgba(255,215,110,${0.85 * I})`
+      // Blotchy, smouldering interior (no glow on these).
+      ctx.shadowBlur = 0
+      ctx.globalCompositeOperation = 'source-over'
+      for (const [bx, by, br, al] of BLOTS) {
+        ctx.fillStyle = `rgba(14,10,4,${al * 0.7})`
+        ctx.beginPath()
+        ctx.arc(cx + bx * cr, cy + by * cr, br * cr, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      ctx.globalCompositeOperation = 'lighter'
+      ctx.shadowBlur = 24
+      const side = ctx.createLinearGradient(cx - cr, cy, cx + cr * 0.9, cy)
+      side.addColorStop(0, `rgba(255,215,110,${0.9 * I})`)
+      side.addColorStop(0.6, `rgba(255,170,50,${0.5 * I})`)
+      side.addColorStop(1, `rgba(255,120,20,${0.12 * I})`)
+      ctx.strokeStyle = side
       ctx.lineWidth = 4
       rimPath(0.94, 0.012)
       ctx.stroke()
       const hot = ctx.createLinearGradient(cx - cr, cy, cx + cr, cy)
       hot.addColorStop(0, `rgba(255,252,225,${I})`)
-      hot.addColorStop(0.5, `rgba(255,235,160,${0.6 * I})`)
-      hot.addColorStop(1, 'rgba(255,200,90,0)')
+      hot.addColorStop(0.42, `rgba(255,235,160,${0.75 * I})`)
+      hot.addColorStop(0.62, 'rgba(255,200,90,0)')
       ctx.strokeStyle = hot
-      ctx.lineWidth = 9
+      ctx.lineWidth = 12
       rimPath(0.94, 0.012)
       ctx.stroke()
       ctx.shadowBlur = 0
@@ -377,6 +418,15 @@ export function Neural() {
       <canvas ref={canvas} className="x-neural" aria-hidden="true" />
       <div className="x-frame" aria-hidden="true" />
       <div className="x-sun" aria-hidden="true" />
+      <div className="x-grid" aria-hidden="true" />
+      <aside className="x-panel" aria-hidden="true">
+        {PANEL.map(([k, v]) => (
+          <div className="x-panel-row" key={k}>
+            <span>{k}</span>
+            <b>{v}</b>
+          </div>
+        ))}
+      </aside>
     </>
   )
 }

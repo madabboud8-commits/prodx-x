@@ -225,14 +225,15 @@ export function Hud() {
         </aside>
       )}
 
-      {/* Right rail: live telemetry, mostly for flavour */}
-      <aside className="rail rail-right">
+      {/* Right rail: live telemetry, mostly for flavour. The neural face
+          brings its own lab panel there instead. */}
+      {ui.reactor.style !== 'neural' && <aside className="rail rail-right">
         <div className="rail-title">SIGNAL</div>
         <div className="meter">
           <div className="meter-fill" style={{ height: `${level * 100}%` }} />
         </div>
         <div className="rail-item mono">{(level * 100).toFixed(0).padStart(3, '0')}%</div>
-      </aside>
+      </aside>}
 
       <AnimatePresence>
         {activeTool && ui.chrome.toolBadge && (
