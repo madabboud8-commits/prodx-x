@@ -14,6 +14,7 @@ import { listenForClap } from './lib/clap'
 import * as camera from './lib/camera'
 import * as kokoro from './lib/kokoro'
 import { Gauge } from './ui/Gauge'
+import { Neural } from './ui/Neural'
 import { TTS_ENGINE, FOLLOW_UP_WINDOW_MS } from './config'
 import { forTool, attention } from './lib/fillers'
 import {
@@ -700,6 +701,7 @@ export default function App() {
   return (
     <>
       <Scene />
+      <Neural />
       <Gauge />
       <Hud />
       <Boot />

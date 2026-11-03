@@ -169,12 +169,12 @@ const reactorSchema = {
       'and up reads as effort.',
   ),
   style: z
-    .enum(['gauge', 'ring', 'sphere', 'wire'])
+    .enum(['neural', 'gauge', 'ring', 'sphere', 'wire'])
     .optional()
     .catch(undefined)
     .describe(
-      'gauge = X\'s default face, a lab measuring dial with the X mark; use it ' +
-        'almost always. ring = a glowing halo. sphere = a solid core, heavier and ' +
+      'neural = X\'s default face, a glowing orange neural burst; use it almost ' +
+        'always. gauge = a lab measuring dial with the X mark. ring = a glowing halo. sphere = a solid core, heavier and ' +
         'more present, good when you are the subject of the conversation. ' +
         'wire = a skeletal lattice, good for diagnostics, degraded states, and ' +
         'anything that should look like it is being taken apart.',
