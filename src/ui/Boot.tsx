@@ -154,7 +154,7 @@ function Rings({ reduced }: { reduced: boolean }) {
 
 /* ------------------------------------------------------------------ beat 4 */
 
-/** The triangular chest reactor, lighting from a dim outline to full glow. */
+/** X's mark, lighting from a dim outline to full glow. */
 function Reactor({ reduced, t }: { reduced: boolean; t: number }) {
   const glow = reduced ? 1 : Math.min(1, Math.max(0, t / 1400))
   const seg = Array.from({ length: 16 }, (_, i) => i)
@@ -180,9 +180,8 @@ function Reactor({ reduced, t }: { reduced: boolean; t: number }) {
       })}
       <circle className="boot-r-ring" cx="0" cy="0" r="102" />
       <circle className="boot-r-ring boot-r-ring-in" cx="0" cy="0" r="66" />
-      <path className="boot-r-tri" d="M0,-52 L46,30 L-46,30 Z" />
-      <path className="boot-r-tri boot-r-tri-in" d="M0,-30 L28,20 L-28,20 Z" />
-      <path className="boot-r-v" d="M-11,-4 L0,14 L11,-4" />
+      {/* X's mark: a bold X in place of the upstream triangular reactor. */}
+      <path className="boot-r-tri" d="M-34,-40 L-14,-40 L0,-16 L14,-40 L34,-40 L10,0 L34,40 L14,40 L0,16 L-14,40 L-34,40 L-10,0 Z" />
     </svg>
   )
 }

@@ -135,14 +135,14 @@ const themeSchema = {
 
 const THEME_DESCRIPTION = `Retint the whole interface.
 
-The HUD is drawn in one colour identity that normally follows your state: cyan
-while listening, amber while thinking, violet while a tool runs, green while you
-speak. An accent overrides that everywhere, at once.
+The HUD is drawn in PRODX Testing Room colours that follow your state: orange
+while listening, amber while thinking, white while a tool runs, pale gold while
+you speak, all on charcoal. An accent overrides that everywhere, at once.
 
-Use it when the colour MEANS something. Red because a check came back bad.
-Amber because you are waiting on something out of your control. A colour pulled
-out of an image you just generated, so the room matches the picture. Deep blue
-because it is three in the morning and they are still working.
+Use it when the colour MEANS something. Green (#3ef2a8) when a measured claim
+PASSES, red (#ff4d4d) when it FAILS, then put it back. Stay inside the PRODX
+palette otherwise: no cyan, violet or blue.
+Amber because you are waiting on something out of your control.
 
 Do not redecorate for the sake of it, and do not leave a strange colour up after
 the moment that earned it has passed — call \`ui_reset\` when it is over.
